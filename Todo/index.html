@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Todo List</title>
+    <style>
+      body {
+        font-family: "Courier New", Courier, monospace;
+        padding: 20px;
+      }
+      h1 {
+        text-align: center;
+        color: #333;
+      }
+      #todo-input {
+        width: 70%;
+        padding: 10px;
+        font-size: 16px;
+      }
+      #add-todo-btn {
+        padding: 10px 20px;
+        font-size: 16px;
+        margin-left: 10px;
+        cursor: pointer;
+      }
+      #todo-list {
+        list-style-type: none;
+        padding: 0;
+        margin-top: 20px;
+      }
+      #todo-list li {
+        background: #f9f9f9;
+        margin-bottom: 10px;
+        padding: 10px;
+        border: 1px solid #ddd;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .delete-btn {
+        background: #ff4d4d;
+        border: none;
+        color: white;
+        padding: 5px 10px;
+        cursor: pointer;
+      }
+      .delete-btn:hover {
+        background: #ff1a1a;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>관찰자 패턴 Todo List</h1>
+    <input type="text" id="todo-input" placeholder="할 일을 입력하세요" />
+    <button id="add-todo-btn">추가</button>
+    <ul id="todo-list"></ul>
+
+    <script>
+      class TodoList {
+        constructor() {
+          this.todos = []; // 상태
+          this.listeners = []; // 구독자 배열
+        }
+
+        // 여기 this들은 모두 new TodoList() 객체를 가리킴
+        addListener(listener) {
+          this.listeners.push(listener); // 구독자 추가
+        }
+
+        removeListener(listener) {
+          this.listeners = this.listeners.filter((l) => l !== listener); // 구독자 제거
+        }
+
+        addTodos(todo) {
+          if (todo.trim() === "") return;
+          this.todos.push(todo);
+          this.notify(); // 상태 변경 알림
+        }
+
+        removeTodos(index) {
+          this.todos.splice(index, 1);
+          this.notify(); // 상태 변경 알림
+        }
+
+        notify() {
+          this.listeners.forEach((listener) => listener.update(this.todos)); // 모든 구독자에게 알림
+        }
+      }
+
+      class TodoDisplay {
+        constructor(listElement) {
+          this.listElement = listElement;
+        }
+
+        update(todos) {
+          this.listElement.innerHTML = ""; // 기존 리스트 초기화
+          todos.forEach((todo, index) => {
+            const li = document.createElement("li");
+            li.textContent = todo;
+
+            const deleteBtn = document.createElement("button");
+            deleteBtn.textContent = "삭제";
+            deleteBtn.classList.add("delete-btn");
+            deleteBtn.onclick = () => {
+              todoList.removeTodos(index);
+            };
+
+            li.appendChild(deleteBtn);
+            this.listElement.appendChild(li);
+          });
+        }
+      }
+
+      const todoList = new TodoList();
+      const todoDisplay = new TodoDisplay(document.getElementById("todo-list"));
+
+      todoList.addListener(todoDisplay);
+
+      document.getElementById("add-todo-btn").addEventListener("click", () => {
+        const input = document.getElementById("todo-input");
+        todoList.addTodos(input.value);
+        input.value = "";
+      });
+
+      document
+        .getElementById("todo-input")
+        .addEventListener("keypress", (e) => {
+          if (e.key === "Enter") {
+            document.getElementById("add-todo-btn").click();
+          }
+        });
+    </script>
+  </body>
+</html>
